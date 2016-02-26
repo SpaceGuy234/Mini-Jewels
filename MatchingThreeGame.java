@@ -92,22 +92,33 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     //And when the second button to swap with has been selected.
     
     public void realHandle(ActionEvent event, SmartButton button){
-        System.out.println(button.getX());
-        System.out.println(button.getY());
         //Checks to see if it is time for a switch, or if another needs to be clicked.
         int buttonsSelected = numButtonsSelected();
         //With this number, have the correct response.  If the number returned is 1
         //Then nothing happens.  The user must pick a second option.  Highlight the tile chosen.
         //If the number returned is 0, then it's time to try and switch the tiles.
         if (buttonsSelected == 1) {
-            System.out.println("Pick another tile");
             rememberMe = button;
             rememberMe.setStyle("-fx-border-color: red");
         }
         else {
-            System.out.println("Time to switch!");
             rememberMe.setStyle("-fx-border-color: transparent");
-            //button.setStyle("-fx-border-shadow: none");
+            button.setStyle("-fx-border-color: grey");
+            button.setStyle("-fx-focus-color: transparent");
+            //Check adjacency.  Make sure that the tiles are next to each other and not diagonal
+            //If this is true, continue swapping.  If not true, nothing happens.
+            int rMX = rememberMe.getX();    //rememberMeX
+            int rMY = rememberMe.getY();    //rememberMeY
+            int bX = button.getX();         //buttonX
+            int bY = button.getY();         //buttonY
+            //This boolean tests adjacency.  It checks to make sure that the x OR the y
+            //Is one away in either direction.  There are four tests because there are four
+            //Possible tests of adjacency.
+            boolean isAdj = ((rMX - bX == 1) && (rMY - bY == 0)) ||
+                            ((rMX - bX == -1) && (rMY - bY == 0)) ||
+                            ((rMX - bX == 0) && (rMY - bY == 1)) ||
+                            ((rMX - bX == 0) && (rMY - bY == -1));
+            System.out.println(isAdj);
         }
     }
     
