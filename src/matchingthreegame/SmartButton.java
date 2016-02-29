@@ -17,12 +17,14 @@ public class SmartButton extends Button{
     private int x;
     private int y;
     private Image symbol;
+    private String picName;
     
-    public SmartButton(int x, int y, Image s) {
+    public SmartButton(int x, int y, Image s, String name) {
         super();
         this.symbol = s;
         this.x = x;
         this.y = y;
+        this.picName = name;
     }
     
     public int getX(){
@@ -31,6 +33,14 @@ public class SmartButton extends Button{
     
     public int getY(){
         return y;
+    }
+    
+    public Image getImage(){
+        return symbol;
+    }
+    
+    public String getName(){
+        return picName;
     }
     
     public void setX(int newX) {

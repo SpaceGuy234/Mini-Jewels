@@ -56,6 +56,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         //Random number generator here to randomly assign symbol to each cell. TEMPORARY
         Random generator = new Random();
         int randomInt;
+        String pictureName = "";
         
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -64,34 +65,41 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 if (randomInt == 0) {
                    //Import the picture that will be assigned to the tile.
                    symbol = new Image("/bluerune.png", 40, 40, true, true);
+                   pictureName = "bluerune";
                 }
                 if (randomInt == 1) {
                    //Import the picture that will be assigned to the tile.
                    symbol = new Image("/drop.png", 40, 40, false, true);
+                   pictureName = "drop";
                 }
                 if (randomInt == 2) {
                    //Import the picture that will be assigned to the tile.
                    symbol = new Image("/greenswirl.png", 40, 40, true, true);
+                   pictureName = "greenswirl";
                 }
                 if (randomInt == 3) {
                    //Import the picture that will be assigned to the tile.
                    symbol = new Image("/minisakura.png", 40, 40, true, true);
+                   pictureName = "minisakura";
                 }
                 if (randomInt == 4) {
                    //Import the picture that will be assigned to the tile.
                    symbol = new Image("/man.png", 40, 40, true, true);
+                   pictureName = "man";
                 }
                 if (randomInt == 5) {
                    //Import the picture that will be assigned to the tile.
                    symbol = new Image("/twin_dragons.png", 40, 40, true, true);
+                   pictureName = "twindragons";
                 }
                 if (randomInt == 6) {
                    //Import the picture that will be assigned to the tile.
                    symbol = new Image("/sunflower.png", 40, 40, true, true);
+                   pictureName = "sunflower";
                 }
                 
                 //Create a SmartButton.  It knows its location.
-                SmartButton button = new SmartButton(j, i, symbol);
+                SmartButton button = new SmartButton(j, i, symbol, pictureName);
                 //Set image
                 button.setGraphic(new ImageView(symbol));
                 //Set the coordinates
@@ -132,14 +140,14 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     //This variable remembers the SmartButton object that was chosen on the
     //Previous turn.  This is done so that the highlighting can be removed when
     //The second tile is chosen.
-    SmartButton rememberMe = new SmartButton(-1, -1, null);
+    SmartButton rememberMe = new SmartButton(-1, -1, null, "");
     
     //The realHandle method.  This is what is called when a button is pressed.
     //It needs to be able to recognize when only one button has been selected.
     //And when the second button to swap with has been selected.
     
     public void realHandle(ActionEvent event, SmartButton button, SmartButton[][] buttonGrid, int rows, int columns){
-
+        System.out.println(button.getName());
         //Checks to see if it is time for a switch, or if another needs to be clicked.
         int buttonsSelected = numButtonsSelected(rememberMe, button);
         //With this number, have the correct response.  If the number returned is 1
@@ -260,11 +268,11 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         //For every empty value in the array, fill it with a nonsensical SmartButton
         //Which we will realize later in the program we won't use
         if (addHere == 2){
-            neighbors[addHere] = new SmartButton(-1, -1, null);
+            neighbors[addHere] = new SmartButton(-1, -1, null, "");
             addHere++;
         }
         if (addHere == 3){
-            neighbors[addHere] = new SmartButton(-1, -1, null);
+            neighbors[addHere] = new SmartButton(-1, -1, null, "");
         }
         
         return neighbors;
