@@ -139,12 +139,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     //And when the second button to swap with has been selected.
     
     public void realHandle(ActionEvent event, SmartButton button, SmartButton[][] buttonGrid, int rows, int columns){
-        SmartButton[] neighbors = new SmartButton[4];
-        neighbors = getNeighbors(buttonGrid, button, rows, columns);
-        System.out.println(neighbors[0].getX());
-        for (int i = 0; i < 4; i++) {
-            System.out.println(neighbors[i].getX() + ", " + neighbors[i].getY());
-        }
 
         //Checks to see if it is time for a switch, or if another needs to be clicked.
         int buttonsSelected = numButtonsSelected(rememberMe, button);
@@ -165,13 +159,21 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             int rMY = rememberMe.getY();    //rememberMeY
             int bX = button.getX();         //buttonX
             int bY = button.getY();         //buttonY
+            
+            //This method call here finds all the neighbors of button
+            SmartButton[] neighbors = new SmartButton[4];
+            neighbors = getNeighbors(buttonGrid, button, rows, columns);
+            
+            //Using the method call above, we will see if rememberMe is in neighbors[]
             //This boolean tests adjacency.  It checks to make sure that the x OR the y
             //Is one away in either direction.  There are four tests because there are four
             //Possible tests of adjacency.
-            boolean isAdj = ((rMX - bX == 1) && (rMY - bY == 0)) ||
-                            ((rMX - bX == -1) && (rMY - bY == 0)) ||
-                            ((rMX - bX == 0) && (rMY - bY == 1)) ||
-                            ((rMX - bX == 0) && (rMY - bY == -1));
+            boolean isAdj = false;
+            for (int i = 0; i < 4; i++) {
+                if ((neighbors[i].getX() == rememberMe.getX()) && (neighbors[i].getY() == rememberMe.getY())){
+                    isAdj = true;
+                }
+            }
             System.out.println(isAdj);
             if (isAdj == false) {
                 //Do something to indicate illegal move
