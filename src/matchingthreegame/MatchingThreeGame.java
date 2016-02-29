@@ -8,6 +8,7 @@ package matchingthreegame;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -46,16 +47,49 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         theGrid.setHgap(3);
         theGrid.setVgap(3);
         
-        int rows = 12;
-        int columns = 12;
+        int rows = 7;
+        int columns = 7;
         
-        //This may not be necessary
+        //2D array to store the buttons in each cell
         SmartButton[][] buttonGrid = new SmartButton[rows][columns];
+        
+        //Random number generator here to randomly assign symbol to each cell. TEMPORARY
+        Random generator = new Random();
+        int randomInt;
         
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/bluerune.png", 30, 30, true, true);
+                //Generate the random number and then assign the corresponding image
+                randomInt = generator.nextInt(7);
+                if (randomInt == 0) {
+                   //Import the picture that will be assigned to the tile.
+                   symbol = new Image("/bluerune.png", 40, 40, true, true);
+                }
+                if (randomInt == 1) {
+                   //Import the picture that will be assigned to the tile.
+                   symbol = new Image("/drop.png", 40, 40, false, true);
+                }
+                if (randomInt == 2) {
+                   //Import the picture that will be assigned to the tile.
+                   symbol = new Image("/greenswirl.png", 40, 40, true, true);
+                }
+                if (randomInt == 3) {
+                   //Import the picture that will be assigned to the tile.
+                   symbol = new Image("/minisakura.png", 40, 40, true, true);
+                }
+                if (randomInt == 4) {
+                   //Import the picture that will be assigned to the tile.
+                   symbol = new Image("/man.png", 40, 40, true, true);
+                }
+                if (randomInt == 5) {
+                   //Import the picture that will be assigned to the tile.
+                   symbol = new Image("/twin_dragons.png", 40, 40, true, true);
+                }
+                if (randomInt == 6) {
+                   //Import the picture that will be assigned to the tile.
+                   symbol = new Image("/sunflower.png", 40, 40, true, true);
+                }
+                
                 //Create a SmartButton.  It knows its location.
                 SmartButton button = new SmartButton(j, i, symbol);
                 //Set image
@@ -72,7 +106,10 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             }
         }
         
-        
+        //IMPORTANT STEP HERE!!!!!!!!
+        //Check the board, and get rid of all matches so that when player
+        //Starts the game, they don't have any freebies.
+        removeInitialPairs(buttonGrid);
         
         //Scene itself.  Size of the window here
         scene = new Scene(theGrid, 600, 500);
@@ -165,6 +202,10 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             buttonCount = 0;
             return buttonCount;
         }
+    }
+    
+    public void removeInitialPairs(SmartButton[][] buttonGrid) {
+        
     }
     
     public void switchImages(SmartButton rememberMe, SmartButton button) {
