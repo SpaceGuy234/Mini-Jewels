@@ -101,7 +101,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 
                 //If button clicked
                 button.setOnAction(e -> {
-                    realHandle(e, button, buttonGrid);
+                    realHandle(e, button, buttonGrid, rows, columns);
                 });
             }
         }
@@ -138,7 +138,14 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     //It needs to be able to recognize when only one button has been selected.
     //And when the second button to swap with has been selected.
     
-    public void realHandle(ActionEvent event, SmartButton button, SmartButton[][] buttonGrid){
+    public void realHandle(ActionEvent event, SmartButton button, SmartButton[][] buttonGrid, int rows, int columns){
+        SmartButton[] neighbors = new SmartButton[4];
+        neighbors = getNeighbors(buttonGrid, button, rows, columns);
+        System.out.println(neighbors[0].getX());
+        for (int i = 0; i < 4; i++) {
+            System.out.println(neighbors[i].getX() + ", " + neighbors[i].getY());
+        }
+
         //Checks to see if it is time for a switch, or if another needs to be clicked.
         int buttonsSelected = numButtonsSelected(rememberMe, button);
         //With this number, have the correct response.  If the number returned is 1
@@ -204,10 +211,63 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         }
     }
     
+    //This method is called at the beginning of the game to make sure that
+    //No rows of three or greater are present at the start.
     public void removeInitialPairs(SmartButton[][] buttonGrid) {
         
     }
     
+    //This method compiles a list of all of the neighbors around it.
+    //The corners and edges are special cases, which is why we need a whole method.
+    public SmartButton[] getNeighbors(SmartButton[][] buttonGrid, SmartButton button, int rows, int columns) {
+        SmartButton[] neighbors = new SmartButton[4];
+        SmartButton buttonToAdd;
+        //This variable will change once every time a value is added so we know where to add the next value.
+        int addHere = 0;
+        //This is checking for the left neighbor.
+        //Check to make sure that there is a neighbor on the left side, as in
+        //The tile is not on the left most wall.
+        if (button.getX() != 0) {
+            //Add the tile on the left side, as in one fewer X and the same Y.
+            buttonToAdd = buttonGrid[button.getX() - 1][button.getY()];
+            neighbors[addHere] = buttonToAdd;
+            addHere++;
+        }
+        //Check to see if tile is on right most wall
+        if (button.getX() != (rows-1)) {
+            //Add the tile on the right side, as in one greater X and the same Y.
+            buttonToAdd = buttonGrid[button.getX() + 1][button.getY()];
+            neighbors[addHere] = buttonToAdd;
+            addHere++;
+        }
+        //Check to see if tile is on top
+        if (button.getY() != 0) {
+            //Add the tile on the top, as in same X and one fewer Y.
+            buttonToAdd = buttonGrid[button.getX()][button.getY() - 1];
+            neighbors[addHere] = buttonToAdd;
+            addHere++;
+        }
+        //Chect to see if tile is on bottom
+        if (button.getY() != (columns - 1)) {
+            //Add the tile below the button, as in same X and one greater Y.
+            buttonToAdd = buttonGrid[button.getX()][button.getY() + 1];
+            neighbors[addHere] = buttonToAdd;
+            addHere++;
+        }
+        
+        //For every empty value in the array, fill it with a nonsensical SmartButton
+        //Which we will realize later in the program we won't use
+        if (addHere == 2){
+            neighbors[addHere] = new SmartButton(-1, -1, null);
+            addHere++;
+        }
+        if (addHere == 3){
+            neighbors[addHere] = new SmartButton(-1, -1, null);
+        }
+        
+        return neighbors;
+        
+    }
     public void switchImages(SmartButton rememberMe, SmartButton button) {
         //rememberMe.getGraphic();
     }
