@@ -49,8 +49,8 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         theGrid.setHgap(3);
         theGrid.setVgap(3);
 
-        int rows = 1;
-        int columns = 1;
+        int rows = 7;
+        int columns = 7;
 
         //2D array to store the buttons in each cell
         SmartButton[][] buttonGrid = new SmartButton[rows][columns];
@@ -59,10 +59,8 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                //Create a SmartButton.  It knows its location.
-                SmartButton button = assignFirstRowCell(j, i, buttonGrid);
-                System.out.println(button.getX());
-                System.out.println(button.getY());
+                //Create a SmartButton.  It knows its location.  This uses the initizli
+                SmartButton button = initializeGrid(j, i, buttonGrid);
                 //Set image
                 button.setGraphic(new ImageView(button.getImage()));
                 //Set the coordinates
@@ -95,12 +93,12 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     }
 
 
-    public SmartButton assignFirstRowCell(int x, int y, SmartButton[][] buttonGrid) {
+    public SmartButton initializeGrid(int x, int y, SmartButton[][] buttonGrid) {
         
         //Create an arrayList of all of the possible values that the cell can be
         //For example, if two adjacent cells are the green symbol, remove green from
         //The array
-        ArrayList<Pair> possibleSymbols = new ArrayList<>(7);
+        ArrayList<Pair<String, Image>> possibleSymbols = new ArrayList<>(7);
         //Add all the possible names to the arrayList
         possibleSymbols.add(new Pair<String, Image>("bluerune", new Image("/bluerune.png", 40, 40, true, true)));
         possibleSymbols.add(new Pair<String, Image>("drop", new Image("/drop.png", 40, 40, false, true)));
@@ -112,53 +110,62 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         //Generate the random number and then assign the corresponding image
         Random generator = new Random();
         int randomInt;
-        String pictureName = ""; 
-        if (x == 0 || x == 1 ) {
-            randomInt = generator.nextInt(7);
-            if (randomInt == 0) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/bluerune.png", 40, 40, true, true);
-                pictureName = "bluerune";
-            }
-            if (randomInt == 1) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/drop.png", 40, 40, false, true);
-                pictureName = "drop";
-            }
-            if (randomInt == 2) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/greenswirl.png", 40, 40, true, true);
-                pictureName = "greenswirl";
-            }
-            if (randomInt == 3) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/minisakura.png", 40, 40, true, true);
-                pictureName = "minisakura";
-            }
-            if (randomInt == 4) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/man.png", 40, 40, true, true);
-                pictureName = "man";
-            }
-            if (randomInt == 5) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/twin_dragons.png", 40, 40, true, true);
-                pictureName = "twindragons";
-            }
-            if (randomInt == 6) {
-                //Import the picture that will be assigned to the tile.
-                symbol = new Image("/sunflower.png", 40, 40, true, true);
-                pictureName = "sunflower";
-            }
-            return new SmartButton(x, y, symbol, pictureName);
+        String pictureName = "";
+        Image image;
+        if ((x == 0 || x == 1) && (y == 0 || y ==1)) {
+            //Do nothing here, just a place holder
         }
+        else if ((!(x == 0 || x == 1)) && (y ==0 || y == 1)){
+            
+            if (buttonGrid[x-2][y].getName().equals(buttonGrid[x-1][y].getName())) {
+                String nameToRemoveX = buttonGrid[x-1][y].getName();
+                for (int i = 0; i < possibleSymbols.size(); i++) {
+                    if (possibleSymbols.get(i).getKey().equals(nameToRemoveX)) {
+                        possibleSymbols.remove(i);
+                    }
+                    
+                }
+            }
+        }
+        
+        else if ((x == 0 || x == 1) && (!(y ==0 || y == 1))) {
+            
+            if (buttonGrid[x][y-2].getName().equals(buttonGrid[x][y-1].getName())) {
+                String nameToRemoveY = buttonGrid[x][y-1].getName();
+                for (int j = 0; j < possibleSymbols.size(); j++) {
+                    if (possibleSymbols.get(j).getKey().equals(nameToRemoveY)) {
+                        possibleSymbols.remove(j);
+                    }
+                }
+            }
+        }
+            
         else {
             if (buttonGrid[x-2][y].getName().equals(buttonGrid[x-1][y].getName())) {
-                
+            String nameToRemoveX = buttonGrid[x-1][y].getName();
+            for (int i = 0; i < possibleSymbols.size(); i++) {
+                if (possibleSymbols.get(i).getKey().equals(nameToRemoveX)) {
+                    possibleSymbols.remove(i);
+                }   
             }
         }
-        return null;
+            else if (buttonGrid[x][y-2].getName().equals(buttonGrid[x][y-1].getName())) {
+                String nameToRemoveY = buttonGrid[x][y-1].getName();
+                for (int j = 0; j < possibleSymbols.size(); j++) {
+                    if (possibleSymbols.get(j).getKey().equals(nameToRemoveY)) {
+                        possibleSymbols.remove(j);
+                    }
+                }      
+            }
+        }
+            
+        randomInt = generator.nextInt(possibleSymbols.size());
+        pictureName = possibleSymbols.get(randomInt).getKey();
+        image = possibleSymbols.get(randomInt).getValue();
+        return new SmartButton(x, y, image, pictureName);
     }
+    
+    
     //This variable remembers the SmartButton object that was chosen on the
     //Previous turn.  This is done so that the highlighting can be removed when
     //The second tile is chosen.
