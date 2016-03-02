@@ -50,4 +50,12 @@ public class SmartButton extends Button{
     public void setY(int newY) {
         this.y = newY;
     }
+    
+    public void setImage(Image newImage) {
+        this.symbol = newImage;
+    }
+    
+    public void setName(String newName) {
+        this.picName = newName;
+    }
 }

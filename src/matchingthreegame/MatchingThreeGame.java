@@ -175,7 +175,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     //It needs to be able to recognize when only one button has been selected.
     //And when the second button to swap with has been selected.
     public void realHandle(ActionEvent event, SmartButton button, SmartButton[][] buttonGrid, int rows, int columns) {
-        System.out.println(button.getName());
         //Checks to see if it is time for a switch, or if another needs to be clicked.
         int buttonsSelected = numButtonsSelected(rememberMe, button);
         //With this number, have the correct response.  If the number returned is 1
@@ -196,7 +195,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             int bY = button.getY();         //buttonY
 
             //This method call here finds all the neighbors of button
-            SmartButton[] neighbors = new SmartButton[4];
+            ArrayList<SmartButton> neighbors = new ArrayList<>();
             neighbors = getNeighbors(buttonGrid, button, rows, columns);
 
             //Using the method call above, we will see if rememberMe is in neighbors[]
@@ -205,17 +204,29 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             //Possible tests of adjacency.
             boolean isAdj = false;
             for (int i = 0; i < 4; i++) {
-                if ((neighbors[i].getX() == rememberMe.getX()) && (neighbors[i].getY() == rememberMe.getY())) {
+                if ((neighbors.get(i).getX() == rememberMe.getX()) && (neighbors.get(i).getY() == rememberMe.getY())) {
                     isAdj = true;
                 }
             }
-            System.out.println(isAdj);
             if (isAdj == false) {
                 //Do something to indicate illegal move
             } else {
                 //Check to see if there is a match in any direction
+                
+                //This method is called twice, once checking for button, once checking for rememberMe, because
+                //It doesn't matter the order in which they are switched
+                System.out.println("X-Checker-First Button");
+                switchImagesCheckHorizontal(buttonGrid, button, rememberMe, rows, columns);
+                System.out.println("Y-Checker-First Button");
+                switchImagesCheckVertical(buttonGrid, button, rememberMe, rows, columns);
+                System.out.println("X-Checker-Second Button");
+                switchImagesCheckHorizontal(buttonGrid, rememberMe, button, rows, columns);
+                System.out.println("Y-Checker-Second Button");
+                switchImagesCheckVertical(buttonGrid, rememberMe, button, rows, columns);
                 //If so, switch
-                switchImages(rememberMe, button);
+                simpleSwitch(buttonGrid, rememberMe, button);
+                
+                //System.out.println("\n\n");
                 //If not, do nothing, choose two more
             }
         }
@@ -247,25 +258,10 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         }
     }
 
-    //This method is called at the beginning of the game to make sure that
-    //No rows of three or greater are present at the start
-    //THIS METHOD MAY BE USELESS.  COMMENT OUT FOR NOW
-    /*
-    public void removeInitialPairs(SmartButton[][] buttonGrid, int rows, int columns) {
-        SmartButton[] neighbors;
-        int count = 1;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++){
-                searchForThrees(buttonGrid, buttonGrid[j][i], rows, columns);
-            }           
-        }
-        System.out.println(count/2);
-    }
-     */
     //This method compiles a list of all of the neighbors around it.
     //The corners and edges are special cases, which is why we need a whole method.
-    public SmartButton[] getNeighbors(SmartButton[][] buttonGrid, SmartButton button, int rows, int columns) {
-        SmartButton[] neighbors = new SmartButton[4];
+    public ArrayList<SmartButton> getNeighbors(SmartButton[][] buttonGrid, SmartButton button, int rows, int columns) {
+        ArrayList<SmartButton> neighbors = new ArrayList<>();
         SmartButton buttonToAdd;
         //This variable will change once every time a value is added so we know where to add the next value.
         int addHere = 0;
@@ -275,47 +271,175 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         if (button.getX() != 0) {
             //Add the tile on the left side, as in one fewer X and the same Y.
             buttonToAdd = buttonGrid[button.getX() - 1][button.getY()];
-            neighbors[addHere] = buttonToAdd;
+            neighbors.add(addHere, buttonToAdd);
             addHere++;
         }
         //Check to see if tile is on right most wall
         if (button.getX() != (rows - 1)) {
             //Add the tile on the right side, as in one greater X and the same Y.
             buttonToAdd = buttonGrid[button.getX() + 1][button.getY()];
-            neighbors[addHere] = buttonToAdd;
+            neighbors.add(addHere, buttonToAdd);
             addHere++;
         }
         //Check to see if tile is on top
         if (button.getY() != 0) {
             //Add the tile on the top, as in same X and one fewer Y.
             buttonToAdd = buttonGrid[button.getX()][button.getY() - 1];
-            neighbors[addHere] = buttonToAdd;
+            neighbors.add(addHere, buttonToAdd);
             addHere++;
         }
         //Chect to see if tile is on bottom
         if (button.getY() != (columns - 1)) {
             //Add the tile below the button, as in same X and one greater Y.
             buttonToAdd = buttonGrid[button.getX()][button.getY() + 1];
-            neighbors[addHere] = buttonToAdd;
+            neighbors.add(addHere, buttonToAdd);
             addHere++;
         }
 
         //For every empty value in the array, fill it with a nonsensical SmartButton
         //Which we will realize later in the program we won't use
         if (addHere == 2) {
-            neighbors[addHere] = new SmartButton(-1, -1, null, "");
+            neighbors.add(addHere, new SmartButton(-1, -1, null, ""));
             addHere++;
         }
         if (addHere == 3) {
-            neighbors[addHere] = new SmartButton(-1, -1, null, "");
+            neighbors.add(addHere, new SmartButton(-1, -1, null, ""));
         }
 
         return neighbors;
 
     }
 
-    public void switchImages(SmartButton rememberMe, SmartButton button) {
-        //rememberMe.getGraphic();
+    public void switchImagesCheckHorizontal(SmartButton[][] buttonGrid, SmartButton button1, SmartButton button2, int rows, int columns) {
+        ArrayList<SmartButton> potentialNeighbors = new ArrayList<>();
+        potentialNeighbors = getNeighbors(buttonGrid, button1, rows, columns);
+        System.out.println(button1.getX());
+        //These values are EXCEEDINGLY IMPORTANT, because they keep the ORIGINAL PLACEMENT
+        //From affecting the neighbors.
+        int forbiddenX = button2.getX();
+        int forbiddenY = button2.getY();
+        //Check horizontally.  This means look at different x values but keep y values constant
+        int remX = button1.getX();
+        //This variable keeps track of how many in a row there are. 
+        int countX = 0;
+        //This array below keeps track of all horizontally adjacent cells with the same symbol
+        ArrayList<SmartButton> sameSymbolX = new ArrayList<>();
+        
+        //Check to the left here
+        if (button1.getX() > 0) {
+            if ((buttonGrid[button1.getX()-1][button1.getY()].getName().equals(button2.getName())) && !(
+                    button1.getX()-1 == forbiddenX && button1.getY() == forbiddenY)) {
+                if (button1.getX() > 1) {
+                    if (buttonGrid[button1.getX()-2][button1.getY()].getName().equals(button2.getName())) {
+                        //The index countX is used because this is how many tiles we have with the same symbol
+                        sameSymbolX.add(countX, buttonGrid[button1.getX()-2][button1.getY()]);
+                        countX++;
+                    }
+                }
+                sameSymbolX.add(countX, buttonGrid[button1.getX()-1][button1.getY()]);
+                countX++;
+            }
+        }
+        
+        //Now add the original button flipped, the one we call button
+        sameSymbolX.add(countX, buttonGrid[button1.getX()][button1.getY()]);
+        countX++;
+        
+        //Check to the right here.  Reuse code from above mostly
+        if (button1.getX() < columns - 1) {
+            if ((buttonGrid[button1.getX()+1][button1.getY()].getName().equals(button2.getName())) && !(
+                    button1.getX()+1 == forbiddenX && button1.getY() == forbiddenY)) {
+                if (button1.getX() < columns - 2) {
+                    if (buttonGrid[button1.getX()+2][button1.getY()].getName().equals(button2.getName())) {
+                        //The index countX is used because this is how many tiles we have with the same symbol
+                        sameSymbolX.add(countX, buttonGrid[button1.getX()+2][button1.getY()]);
+                        countX++;
+                    }
+                }
+                sameSymbolX.add(countX, buttonGrid[button1.getX()+1][button1.getY()]);
+                countX++;
+            }
+        }
+        
+        
+        for (int i = 0; i < sameSymbolX.size(); i++) {
+            System.out.println(sameSymbolX.get(i).getX() + ", " + sameSymbolX.get(i).getY());
+        }
+        
+        //If countX equals at least 3, then we have a match!  They need to be removed
+    }
+    
+    public void switchImagesCheckVertical(SmartButton[][] buttonGrid, SmartButton button1, SmartButton button2, int rows, int columns) {
+        ArrayList<SmartButton> potentialNeighbors = new ArrayList<>();
+        potentialNeighbors = getNeighbors(buttonGrid, button1, rows, columns);
+        System.out.println(button1.getX());
+        //These values are EXCEEDINGLY IMPORTANT, because they keep the ORIGINAL PLACEMENT
+        //From affecting the neighbors.
+        int forbiddenX = button2.getX();
+        int forbiddenY = button2.getY();
+        //Check horizontally.  This means look at different x values but keep y values constant
+        int remY = button1.getY();
+        //This variable keeps track of how many in a row there are. 
+        int countY = 0;
+        //This array below keeps track of all horizontally adjacent cells with the same symbol
+        ArrayList<SmartButton> sameSymbolY = new ArrayList<>();
+        
+        //Check to the top here
+        if (button1.getY() > 0) {
+            if ((buttonGrid[button1.getX()][button1.getY()-1].getName().equals(button2.getName())) && !(
+                    button1.getX() == forbiddenX && button1.getY()-1 == forbiddenY)) {
+                if (button1.getY() > 1) {
+                    if (buttonGrid[button1.getX()][button1.getY()-2].getName().equals(button2.getName())) {
+                        //The index countX is used because this is how many tiles we have with the same symbol
+                        sameSymbolY.add(countY, buttonGrid[button1.getX()][button1.getY()-2]);
+                        countY++;
+                    }
+                }
+                sameSymbolY.add(countY, buttonGrid[button1.getX()][button1.getY()-1]);
+                countY++;
+            }
+        }
+        
+        //Now add the original button flipped, the one we call button
+        sameSymbolY.add(countY, buttonGrid[button1.getX()][button1.getY()]);
+        countY++;
+        
+        //Check to the bottom here.  Reuse code from above mostly
+        if (button1.getY() < rows - 1) {
+            if ((buttonGrid[button1.getX()][button1.getY()+1].getName().equals(button2.getName())) && !(
+                    (button1.getX() == forbiddenX) && (button1.getY()+1 == forbiddenY))) {
+                if (button1.getY() < rows - 2) {
+                    if (buttonGrid[button1.getX()][button1.getY()+2].getName().equals(button2.getName())) {
+                        //The index countX is used because this is how many tiles we have with the same symbol
+                        sameSymbolY.add(countY, buttonGrid[button1.getX()][button1.getY()+2]);
+                        countY++;
+                    }
+                }
+                sameSymbolY.add(countY, buttonGrid[button1.getX()][button1.getY()+1]);
+                countY++;
+            }
+        }
+        
+        
+        for (int i = 0; i < sameSymbolY.size(); i++) {
+            System.out.println(sameSymbolY.get(i).getX() + ", " + sameSymbolY.get(i).getY());
+        }
+        
+        //If countX equals at least 3, then we have a match!  They need to be removed
+    }
+    
+    public void simpleSwitch(SmartButton[][] buttonGrid, SmartButton button1, SmartButton button2) {
+        Image button1Image = button1.getImage();
+        Image button2Image = button2.getImage();
+        String button1Name = button1.getName();
+        String button2Name = button2.getName();
+        button1.setImage(button2Image);
+        button2.setImage(button1Image);
+        button1.setName(button2Name);
+        button2.setName(button1Name);
+        button1.setGraphic(new ImageView(button2Image));
+        button2.setGraphic(new ImageView(button1Image));
+        
     }
 
     public static void main(String[] args) {
