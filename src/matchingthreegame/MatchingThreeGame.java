@@ -6,20 +6,14 @@
 package matchingthreegame;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.animation.PauseTransition;
+import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
@@ -96,21 +90,28 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     public void handle(ActionEvent event) {
         System.out.println("Won't use this method");
     }
-
-    public SmartButton initializeGrid(int x, int y, SmartButton[][] buttonGrid) {
-
-        //Create an arrayList of all of the possible values that the cell can be
-        //For example, if two adjacent cells are the green symbol, remove green from
-        //The array
+    
+    
+    public ArrayList<Pair<String, Image>> makeList() {
+        //The arrayList
         ArrayList<Pair<String, Image>> possibleSymbols = new ArrayList<>(7);
-        //Add all the possible names to the arrayList
-        possibleSymbols.add(new Pair<String, Image>("bluerune", new Image("/bluerune.png", 40, 40, true, true)));
         possibleSymbols.add(new Pair<String, Image>("drop", new Image("/drop.png", 40, 40, false, true)));
         possibleSymbols.add(new Pair<String, Image>("greenswirl", new Image("/greenswirl.png", 40, 40, true, true)));
         possibleSymbols.add(new Pair<String, Image>("minisakura", new Image("/minisakura.png", 40, 40, true, true)));
         possibleSymbols.add(new Pair<String, Image>("man", new Image("/man.png", 40, 40, true, true)));
         possibleSymbols.add(new Pair<String, Image>("twindragons", new Image("/twin_dragons.png", 40, 40, true, true)));
         possibleSymbols.add(new Pair<String, Image>("sunflower", new Image("/sunflower.png", 40, 40, true, true)));
+        
+        return possibleSymbols;
+    }
+    public SmartButton initializeGrid(int x, int y, SmartButton[][] buttonGrid) {
+
+        //Create an arrayList of all of the possible values that the cell can be
+        //For example, if two adjacent cells are the green symbol, remove green from
+        
+        //Add all the possible names to the arrayList
+        
+        ArrayList<Pair<String, Image>> possibleSymbols = makeList();
         //Generate the random number and then assign the corresponding image
         Random generator = new Random();
         int randomInt;
@@ -227,28 +228,11 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 if (match) {
                     simpleSwitch(buttonGrid, rememberMe, button);
                     ArrayList<SmartButton> noDuplicates = getListOfRemoved(firstX, firstY, secondX, secondY);
-                    System.out.println(noDuplicates.size());
-
+                    remove(noDuplicates, buttonGrid);
                 }
-                /*else {
-                    My attempt to make the program wait if something wrong happens
-                    And switch, turn red to indicate it won't work, and turn back
-                    This did not work.
-                    //Switch once to act like it's "testing"
-                    rememberMe.setStyle("-fx-background-color: red");
-                    simpleSwitch(buttonGrid, rememberMe, button);
-                    r = () -> {
-                        PauseTransition pt = new PauseTransition(Duration.millis(1000));
-                        pt.play();
-                        
-                    };
-                    t = new Thread(r);
-                    t.start();
-                    simpleSwitch(buttonGrid, rememberMe, button);
-                    rememberMe.setBackground(Background.EMPTY);
-                    
-                    
-                }*/
+                else {
+                     //If we can indicate that the move didn't work here, that would be fantastic
+                }
                 //System.out.println("\n\n");
                 //If not, do nothing, choose two more
             }
@@ -534,6 +518,76 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         }
         
         return noDuplicates;
+    }
+    FadeTransition ft;
+    
+    public void remove(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
+        for (SmartButton s : noDuplicates) {
+            
+            ft = new FadeTransition(Duration.millis(1000), s);
+            ft.setFromValue(0.2);
+            ft.setToValue(1.0);
+            ft.play();
+        }
+        boolean isHor = checkForHorizontal(noDuplicates);
+        for (SmartButton s : noDuplicates) {
+            //Check to see if there is a match horizontally.  If so, use this method
+            if (isHor) {
+                assignNewValueHorizontal(s, noDuplicates, buttonGrid);
+            }
+            //Check to see if there is a match vertically.  If so, use this method.
+        }
+    }
+    
+    public boolean checkForHorizontal(ArrayList<SmartButton> noDuplicates) {
+        int horCount = 0;
+        for (SmartButton s : noDuplicates) {
+            for (SmartButton b: noDuplicates) {
+                if (b.getY() == s.getY()) {
+                    horCount++;
+                }
+            }
+            if (horCount >= 3) {
+                return true;
+            }
+            horCount = 0;
+        }
+        return false;
+    }
+    
+    public void assignNewValueHorizontal(SmartButton s, ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
+        //This variable will count how many buttons there are in the array in the same column
+        //We need this variable because we need to know how far everything has to fall to fill
+        //In the holes made by the removal
+        int count = 0;
+        ArrayList<Pair<String, Image>> possibleSymbols = makeList();
+        Random generator = new Random();
+        int randomInt;
+        String pictureName = "";
+        Image image;
+        //for (SmartButton s : noDuplicates) {
+            for (SmartButton b : noDuplicates) {
+                if ((b.getX() == s.getX()) && (b.getName().equals(s.getName()))) {
+                    count++;
+                }
+            }
+            for (int i = s.getY(); i >= 0; i--) {
+                if (i - count > -1) {
+                    int theX = s.getX();
+                    buttonGrid[s.getX()][i].setName(buttonGrid[s.getX()][i-count].getName());
+                    buttonGrid[s.getX()][i].setImage(buttonGrid[s.getX()][i-count].getImage());
+                    buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i-count].getImage()));
+                    System.out.println(i-count);
+                }
+                else {
+                    randomInt = generator.nextInt(possibleSymbols.size());
+                    buttonGrid[s.getX()][i].setImage(possibleSymbols.get(randomInt).getValue());
+                    buttonGrid[s.getX()][i].setName(possibleSymbols.get(randomInt).getKey());
+                    String theName = buttonGrid[s.getX()][i].getName();
+                    buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i].getImage()));
+                }
+            }
+        //}
     }
 
     public static void main(String[] args) {
