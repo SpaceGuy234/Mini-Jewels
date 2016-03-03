@@ -72,7 +72,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
 
                 //If button clicked
                 button.setOnAction(e -> {
-                    realHandle(e, button, buttonGrid, rows, columns);
+                    startHere(e, button, buttonGrid, rows, columns);
                 });
             }
         }
@@ -176,7 +176,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     //The realHandle method.  This is what is called when a button is pressed.
     //It needs to be able to recognize when only one button has been selected.
     //And when the second button to swap with has been selected.
-    public void realHandle(ActionEvent event, SmartButton button, SmartButton[][] buttonGrid, int rows, int columns) {
+    public void startHere(ActionEvent event, SmartButton button, SmartButton[][] buttonGrid, int rows, int columns) {
         //Checks to see if it is time for a switch, or if another needs to be clicked.
         int buttonsSelected = numButtonsSelected(rememberMe, button);
         //With this number, have the correct response.  If the number returned is 1
@@ -190,6 +190,12 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             rememberMe.setStyle("-fx-border-color: transparent");
             //Check adjacency.  Make sure that the tiles are next to each other and not diagonal
             //If this is true, continue swapping.  If not true, nothing happens.
+            realHandle(button, buttonGrid, rows, columns);
+        }
+    }
+    
+    public void realHandle(SmartButton button, SmartButton[][] buttonGrid, int rows, int columns) {
+        
             int rMX = rememberMe.getX();    //rememberMeX
             int rMY = rememberMe.getY();    //rememberMeY
             int bX = button.getX();         //buttonX
@@ -230,7 +236,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 if (match) {
                     simpleSwitch(buttonGrid, rememberMe, button);
                     ArrayList<SmartButton> noDuplicates = getListOfRemoved(firstX, firstY, secondX, secondY);
-                    remove(noDuplicates, buttonGrid);
+                    remove(noDuplicates, buttonGrid, rows, columns);
                 }
                 else {
                      //If we can indicate that the move didn't work here, that would be fantastic
@@ -239,7 +245,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 //If not, do nothing, choose two more
             }
         }
-    }
 
     //The method called numButtonsSelected.  This is a vitally important method.
     //It checks to see if one or two buttons are currently selected.  Why? Because
@@ -517,7 +522,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     
     FadeTransition ft;
     
-    public void remove(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
+    public void remove(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid, int rows, int columns) {
         for (SmartButton s : noDuplicates) {
             
             ft = new FadeTransition(Duration.millis(1000), s);
@@ -539,19 +544,23 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             //Match both vertically and horizontally. 
             ArrayList<SmartButton> horizontalIncludingDupe = new ArrayList<>();
             ArrayList<SmartButton> verticalNoDupe = new ArrayList<>();
+            verticalNoDupe = noDuplicates;
             int commonY = getCommonY(noDuplicates);
             if (commonY != -1) {
                 for (int i = 0; i < noDuplicates.size(); i++) {
                     if (noDuplicates.get(i).getY() == commonY) {
                         horizontalIncludingDupe.add(noDuplicates.get(i));
-                        noDuplicates.remove(i);
+                        verticalNoDupe.remove(i);
                         assignNewValueHorizontal(horizontalIncludingDupe, buttonGrid);
                     }
                 }
             }
             verticalNoDupe = noDuplicates;
             assignNewValueVertical(verticalNoDupe, buttonGrid);
-            
+        }
+        //getRidOfGeneratedPairs(buttonGrid, rows, columns);
+        for (SmartButton s : noDuplicates) {
+            findAutomatedPairs(buttonGrid, rows, columns);
         }
             
         //}
@@ -665,6 +674,106 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         //This return statement should never happen;
         return -1;
     }
+    
+    public void findAutomatedPairs(SmartButton[][] buttonGrid, int rows, int columns) {
+        SmartButton twoAbove = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton twoBelow = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton oneAbove = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton oneBelow = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton twoLeft = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton twoRight = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton oneLeft = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton oneRight = new SmartButton(-1, -1, null, "Nothing");
+        SmartButton currentButton;
+        ArrayList<SmartButton> neighbors = new ArrayList<>();
+        for (int i = 0; i < buttonGrid.length; i++) {
+            for (int j = 0; j < buttonGrid.length; j++) {
+                
+                //Establish possible neighbors
+                currentButton = buttonGrid[j][i];
+                if (j > 0) {
+                    oneLeft = buttonGrid[j-1][i];
+                    if (j > 1) {
+                        twoLeft = buttonGrid[j-2][i];
+                    }
+                }
+                if (j < (rows-1)) {
+                    oneRight = buttonGrid[j+1][i];
+                    if (j < (rows-2)) {
+                        twoRight = buttonGrid[j+2][i];
+                    }
+                }
+                if (i > 0) {
+                    oneAbove = buttonGrid[j][i-1];
+                    if (i > 1) {
+                        twoAbove = buttonGrid[j][i-2];
+                    }
+                }
+                if (i < (columns-1)) {
+                    oneBelow = buttonGrid[j][i+1];
+                    if (i < (columns-2)) {
+                        twoBelow = buttonGrid[j][i+2];
+                    }
+                }
+                
+                //Now take out all possible matches of three.  This will be LONG
+                //And inefficient, but it should work.
+                if (oneAbove.getName().equals(currentButton.getName())) {
+                    neighbors.add(oneAbove);
+                    neighbors.add(currentButton);
+                    if (twoAbove.getName().equals(currentButton.getName())) {
+                        neighbors.add(twoAbove);
+                    }
+                }
+                if (oneBelow.getName().equals(currentButton.getName())) {
+                    neighbors.add(oneBelow);
+                    if(twoBelow.getName().equals(currentButton.getName())) {
+                        neighbors.add(twoBelow);
+                    }
+                }
+                if (neighbors.size() >= 3) {
+                    remove(neighbors, buttonGrid, rows, columns);
+                }
+                neighbors.clear();
+                
+                if (oneLeft.getName().equals(currentButton.getName())) {
+                    neighbors.add(oneLeft);
+                    neighbors.add(currentButton);
+                    if (twoLeft.getName().equals(currentButton.getName())) {
+                        neighbors.add(twoLeft);
+                    }
+                }
+                if (oneRight.getName().equals(currentButton.getName())) {
+                    neighbors.add(oneRight);
+                    if(twoRight.getName().equals(currentButton.getName())) {
+                        neighbors.add(twoRight);
+                    }
+                }
+                if (neighbors.size() >= 3) {
+                    remove(neighbors, buttonGrid, rows, columns);
+                }
+                neighbors.clear();
+                
+            }
+            
+        }
+    }
+    
+    //Leave this commented out now.  After using it unsuccessfully, it seems like it checks for every possible move.
+    //Could be helpful!
+    /*public void getRidOfGeneratedPairs(SmartButton[][] buttonGrid, int rows, int columns){
+        ArrayList<SmartButton> neighbors = new ArrayList<>();
+        for (int i = 0; i < buttonGrid.length; i++) {
+            for (int j = 0; j < buttonGrid.length; j++) {
+                neighbors = getNeighbors(buttonGrid, buttonGrid[j][i], rows, columns);
+                for (int k = 0; k < neighbors.size(); k++) {
+                    if (neighbors.get(k).getX() != -1) {
+                        realHandle(buttonGrid[j][i], neighbors.get(k), buttonGrid, rows, columns);
+                    }
+                }
+            }
+        }
+    }*/
 
     public static void main(String[] args) {
         launch(args);
