@@ -578,7 +578,9 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     Random generator = new Random();
     int randomInt;
     String pictureName = "";
-    Image image;   
+    Image image;
+    int lowestY = -1;
+    int newY;
     
     public void assignNewValueHorizontal(SmartButton s, ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
         //This variable will count how many buttons there are in the array in the same column
@@ -596,33 +598,34 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 randomInt = generator.nextInt(possibleSymbols.size());
                 buttonGrid[s.getX()][i].setImage(possibleSymbols.get(randomInt).getValue());
                 buttonGrid[s.getX()][i].setName(possibleSymbols.get(randomInt).getKey());
-                String theName = buttonGrid[s.getX()][i].getName();
                 buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i].getImage()));
             }
         }   
     }
     
     public void assignNewValueVertical(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid){
-        int lowestY = -1;
-        int newY;
         for (int b = 0; b < noDuplicates.size(); b++) {
             newY = noDuplicates.get(b).getY();
             if (newY > lowestY) {
                 lowestY = newY;
             }
         }
-        System.out.println("Lowest Y: " + lowestY);
-        System.out.println("How far? " + (lowestY-noDuplicates.size()));
         SmartButton theButton;
         SmartButton giverButton; //Called this because this button "gives" it's information to theButton.
+        int permanentX = noDuplicates.get(0).getX();
         for (int i = lowestY; i-noDuplicates.size() >= 0; i--) {
-            int permanentX = noDuplicates.get(0).getX();
             theButton = buttonGrid[permanentX][i];
             giverButton = buttonGrid[permanentX][i-noDuplicates.size()];
             theButton.setName(giverButton.getName());
             theButton.setImage(giverButton.getImage());
             theButton.setGraphic(new ImageView(giverButton.getImage()));
-            System.out.println(theButton.getX() + ", " + theButton.getY() + "-> Name: " + theButton.getName());
+        }
+        for (int j = (noDuplicates.size() - 1); j >= 0; j--) {
+            theButton = buttonGrid[permanentX][j];
+            randomInt = generator.nextInt(possibleSymbols.size());
+            theButton.setImage(possibleSymbols.get(randomInt).getValue());
+            theButton.setName(possibleSymbols.get(randomInt).getKey());
+            theButton.setGraphic(new ImageView(theButton.getImage()));
         }
         
     }
