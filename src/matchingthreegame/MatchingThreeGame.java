@@ -528,15 +528,32 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         boolean isHor = checkForHorizontal(noDuplicates);
         boolean isVert = checkForVertical(noDuplicates);
         if (isHor && (!isVert)) {
-            for (SmartButton s : noDuplicates) {
-                //Check to see if there is a match horizontally.  If so, use this method
-                assignNewValueHorizontal(s, noDuplicates, buttonGrid);
-            }
+            //Check to see if there is a match horizontally.  If so, use this method
+            assignNewValueHorizontal(noDuplicates, buttonGrid);
         }
-        if ((!isHor) && isVert) {
+        else if ((!isHor) && isVert) {
+            //Check to see if there is a match vertically.  If so, use this method.
             assignNewValueVertical(noDuplicates, buttonGrid);
         }
-            //Check to see if there is a match vertically.  If so, use this method.
+        else {
+            //Match both vertically and horizontally. 
+            ArrayList<SmartButton> horizontalIncludingDupe = new ArrayList<>();
+            ArrayList<SmartButton> verticalNoDupe = new ArrayList<>();
+            int commonY = getCommonY(noDuplicates);
+            if (commonY != -1) {
+                for (int i = 0; i < noDuplicates.size(); i++) {
+                    if (noDuplicates.get(i).getY() == commonY) {
+                        horizontalIncludingDupe.add(noDuplicates.get(i));
+                        noDuplicates.remove(i);
+                        assignNewValueHorizontal(horizontalIncludingDupe, buttonGrid);
+                    }
+                }
+            }
+            verticalNoDupe = noDuplicates;
+            assignNewValueVertical(verticalNoDupe, buttonGrid);
+            
+        }
+            
         //}
     }
     
@@ -549,7 +566,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 }
             }
             if (horCount >= 3) {
-                System.out.println("Horizontal Match");
                 return true;
             }
             horCount = 0;
@@ -566,7 +582,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 }
             }
             if (vertCount >= 3) {
-                System.out.println("Vertical Match");
                 return true;
             }
             vertCount = 0;
@@ -582,28 +597,31 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
     int lowestY = -1;
     int newY;
     
-    public void assignNewValueHorizontal(SmartButton s, ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
+    public void assignNewValueHorizontal(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
         //This variable will count how many buttons there are in the array in the same column
         //We need this variable because we need to know how far everything has to fall to fill
         //In the holes made by the removal
         //for (SmartButton s : noDuplicates) {
-        for (int i = s.getY(); i >= 0; i--) {
-            if (i - 1 > -1) {
-                int theX = s.getX();
-                buttonGrid[s.getX()][i].setName(buttonGrid[s.getX()][i-1].getName());
-                buttonGrid[s.getX()][i].setImage(buttonGrid[s.getX()][i-1].getImage());
-                buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i-1].getImage()));
+        for (SmartButton s : noDuplicates) { 
+            for (int i = s.getY(); i >= 0; i--) {
+                if (i - 1 > -1) {
+                    int theX = s.getX();
+                    buttonGrid[s.getX()][i].setName(buttonGrid[s.getX()][i-1].getName());
+                    buttonGrid[s.getX()][i].setImage(buttonGrid[s.getX()][i-1].getImage());
+                    buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i-1].getImage()));
+                }
+                else {
+                    randomInt = generator.nextInt(possibleSymbols.size());
+                    buttonGrid[s.getX()][i].setImage(possibleSymbols.get(randomInt).getValue());
+                    buttonGrid[s.getX()][i].setName(possibleSymbols.get(randomInt).getKey());
+                    buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i].getImage()));
+                }
             }
-            else {
-                randomInt = generator.nextInt(possibleSymbols.size());
-                buttonGrid[s.getX()][i].setImage(possibleSymbols.get(randomInt).getValue());
-                buttonGrid[s.getX()][i].setName(possibleSymbols.get(randomInt).getKey());
-                buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i].getImage()));
-            }
-        }   
+        }
     }
     
     public void assignNewValueVertical(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid){
+        lowestY = -1;
         for (int b = 0; b < noDuplicates.size(); b++) {
             newY = noDuplicates.get(b).getY();
             if (newY > lowestY) {
@@ -613,6 +631,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         SmartButton theButton;
         SmartButton giverButton; //Called this because this button "gives" it's information to theButton.
         int permanentX = noDuplicates.get(0).getX();
+        System.out.println(lowestY);
         for (int i = lowestY; i-noDuplicates.size() >= 0; i--) {
             theButton = buttonGrid[permanentX][i];
             giverButton = buttonGrid[permanentX][i-noDuplicates.size()];
@@ -628,6 +647,23 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             theButton.setGraphic(new ImageView(theButton.getImage()));
         }
         
+    }
+    
+    public int getCommonY(ArrayList<SmartButton> noDuplicates) {
+        int occurance = 0;
+        for (int i = 0; i < noDuplicates.size(); i++) {
+            int valueToCheck = noDuplicates.get(i).getY();
+            for (int j = 0; j < noDuplicates.size(); j++) {
+                if (noDuplicates.get(j).getY() == valueToCheck){
+                    occurance++;
+                }
+            }
+            if (occurance >= 3) {
+                return valueToCheck;
+            }
+        }
+        //This return statement should never happen;
+        return -1;
     }
 
     public static void main(String[] args) {
