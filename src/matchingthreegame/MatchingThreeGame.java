@@ -17,7 +17,10 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Pair;
@@ -182,10 +185,9 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         if (buttonsSelected == 1) {
             rememberMe = button;
             rememberMe.setStyle("-fx-border-color: red");
-        } else {
+        } 
+        else {
             rememberMe.setStyle("-fx-border-color: transparent");
-            button.setStyle("-fx-border-color: grey");
-            button.setStyle("-fx-focus-color: transparent");
             //Check adjacency.  Make sure that the tiles are next to each other and not diagonal
             //If this is true, continue swapping.  If not true, nothing happens.
             int rMX = rememberMe.getX();    //rememberMeX
@@ -214,13 +216,13 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
 
                 //This method is called twice, once checking for button, once checking for rememberMe, because
                 //It doesn't matter the order in which they are switched
-                //System.out.println("X-Checker-First Button");
+                //X-Checker-First Button
                 ArrayList<SmartButton> firstX = switchImagesCheckHorizontal(buttonGrid, button, rememberMe, rows, columns);
-                //System.out.println("Y-Checker-First Button");
+                //Y-Checker-First Button
                 ArrayList<SmartButton> firstY = switchImagesCheckVertical(buttonGrid, button, rememberMe, rows, columns);
-                //System.out.println("X-Checker-Second Button");
+                //X-Checker-Second Button
                 ArrayList<SmartButton> secondX = switchImagesCheckHorizontal(buttonGrid, rememberMe, button, rows, columns);
-                //System.out.println("Y-Checker-Second Button");
+                //Y-Checker-Second Button
                 ArrayList<SmartButton> secondY = switchImagesCheckVertical(buttonGrid, rememberMe, button, rows, columns);
                 //If one of these booleans is true, that means that there is three in a row in some direction.
                 //Create a boolean to encompass all of these
@@ -365,11 +367,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             }
         }
 
-        //This method prints out all of the neighbors if they were to switch.  Just a checking mechanism
-        /*Comment out for now so we don't have lots of crazy, unnecessary output.
-        for (int i = 0; i < sameSymbolX.size(); i++) {
-            System.out.println(sameSymbolX.get(i).getX() + ", " + sameSymbolX.get(i).getY());
-        }*/
         //If countX equals at least 3, then we have a match!  They need to be removed
         //Return that we have three in a row to allow the next method which removes code
         //To happen.
@@ -424,10 +421,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             }
         }
 
-        /*We no longer need this input.  It was just a checker
-        for (int i = 0; i < sameSymbolY.size(); i++) {
-            System.out.println(sameSymbolY.get(i).getX() + ", " + sameSymbolY.get(i).getY());
-        }*/
         //If countX equals at least 3, then we have a match!  They need to be removed
         //Return that we have three in a row to allow the next method which removes code
         //To happen.
@@ -513,12 +506,15 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                     noDuplicates.add(b);
                 }
             }
-            //These statements will NEVER happen, but we will write them to 
-            //Satisfy the return so the method knows it has to return
+            for (SmartButton s : noDuplicates) {
+                s.setBackground(new Background(new BackgroundFill(Color.GOLD, CornerRadii.EMPTY, Insets.EMPTY)));
+                //s.setStyle("-fx-border-color: green");
+            }
         }
         
         return noDuplicates;
     }
+    
     FadeTransition ft;
     
     public void remove(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
@@ -530,13 +526,18 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
             ft.play();
         }
         boolean isHor = checkForHorizontal(noDuplicates);
-        for (SmartButton s : noDuplicates) {
-            //Check to see if there is a match horizontally.  If so, use this method
-            if (isHor) {
+        boolean isVert = checkForVertical(noDuplicates);
+        if (isHor && (!isVert)) {
+            for (SmartButton s : noDuplicates) {
+                //Check to see if there is a match horizontally.  If so, use this method
                 assignNewValueHorizontal(s, noDuplicates, buttonGrid);
             }
-            //Check to see if there is a match vertically.  If so, use this method.
         }
+        if ((!isHor) && isVert) {
+            assignNewValueVertical(noDuplicates, buttonGrid);
+        }
+            //Check to see if there is a match vertically.  If so, use this method.
+        //}
     }
     
     public boolean checkForHorizontal(ArrayList<SmartButton> noDuplicates) {
@@ -548,6 +549,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 }
             }
             if (horCount >= 3) {
+                System.out.println("Horizontal Match");
                 return true;
             }
             horCount = 0;
@@ -555,39 +557,74 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         return false;
     }
     
+    public boolean checkForVertical(ArrayList<SmartButton> noDuplicates) {
+        int vertCount = 0;
+        for (SmartButton s : noDuplicates) {
+            for (SmartButton b: noDuplicates) {
+                if (b.getX() == s.getX()) {
+                    vertCount++;
+                }
+            }
+            if (vertCount >= 3) {
+                System.out.println("Vertical Match");
+                return true;
+            }
+            vertCount = 0;
+        }
+        return false;
+    }
+    
+    ArrayList<Pair<String, Image>> possibleSymbols = makeList();
+    Random generator = new Random();
+    int randomInt;
+    String pictureName = "";
+    Image image;   
+    
     public void assignNewValueHorizontal(SmartButton s, ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid) {
         //This variable will count how many buttons there are in the array in the same column
         //We need this variable because we need to know how far everything has to fall to fill
         //In the holes made by the removal
-        int count = 0;
-        ArrayList<Pair<String, Image>> possibleSymbols = makeList();
-        Random generator = new Random();
-        int randomInt;
-        String pictureName = "";
-        Image image;
         //for (SmartButton s : noDuplicates) {
-            for (SmartButton b : noDuplicates) {
-                if ((b.getX() == s.getX()) && (b.getName().equals(s.getName()))) {
-                    count++;
-                }
+        for (int i = s.getY(); i >= 0; i--) {
+            if (i - 1 > -1) {
+                int theX = s.getX();
+                buttonGrid[s.getX()][i].setName(buttonGrid[s.getX()][i-1].getName());
+                buttonGrid[s.getX()][i].setImage(buttonGrid[s.getX()][i-1].getImage());
+                buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i-1].getImage()));
             }
-            for (int i = s.getY(); i >= 0; i--) {
-                if (i - count > -1) {
-                    int theX = s.getX();
-                    buttonGrid[s.getX()][i].setName(buttonGrid[s.getX()][i-count].getName());
-                    buttonGrid[s.getX()][i].setImage(buttonGrid[s.getX()][i-count].getImage());
-                    buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i-count].getImage()));
-                    System.out.println(i-count);
-                }
-                else {
-                    randomInt = generator.nextInt(possibleSymbols.size());
-                    buttonGrid[s.getX()][i].setImage(possibleSymbols.get(randomInt).getValue());
-                    buttonGrid[s.getX()][i].setName(possibleSymbols.get(randomInt).getKey());
-                    String theName = buttonGrid[s.getX()][i].getName();
-                    buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i].getImage()));
-                }
+            else {
+                randomInt = generator.nextInt(possibleSymbols.size());
+                buttonGrid[s.getX()][i].setImage(possibleSymbols.get(randomInt).getValue());
+                buttonGrid[s.getX()][i].setName(possibleSymbols.get(randomInt).getKey());
+                String theName = buttonGrid[s.getX()][i].getName();
+                buttonGrid[s.getX()][i].setGraphic(new ImageView(buttonGrid[s.getX()][i].getImage()));
             }
-        //}
+        }   
+    }
+    
+    public void assignNewValueVertical(ArrayList<SmartButton> noDuplicates, SmartButton[][]buttonGrid){
+        int lowestY = -1;
+        int newY;
+        for (int b = 0; b < noDuplicates.size(); b++) {
+            newY = noDuplicates.get(b).getY();
+            if (newY > lowestY) {
+                lowestY = newY;
+            }
+        }
+        System.out.println("Lowest Y: " + lowestY);
+        System.out.println("How far? " + (lowestY-noDuplicates.size()));
+        SmartButton theButton;
+        SmartButton giverButton; //Called this because this button "gives" it's information to theButton.
+        for (int i = lowestY; i-noDuplicates.size() >= 0; i--) {
+            int permanentX = noDuplicates.get(0).getX();
+            theButton = buttonGrid[permanentX][i];
+            giverButton = buttonGrid[permanentX][i-noDuplicates.size()];
+            theButton.setName(giverButton.getName());
+            theButton.setImage(giverButton.getImage());
+            theButton.setGraphic(new ImageView(giverButton.getImage()));
+            System.out.println(theButton.getX() + ", " + theButton.getY() + "-> Name: " + theButton.getName());
+        }
+        
     }
 
     public static void main(String[] args) {
