@@ -8,18 +8,25 @@ package matchingthreegame;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -33,12 +40,16 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
 
     //Necessary Variable to get the GUI to show
     Stage window;
-    Scene scene;
+    Scene scene1, scene2;
 
     Image symbol;
     Runnable r;
     Thread t;
+    
+    ArrayList<SmartButton> allButtons = new ArrayList<>();
 
+    int count = 0;
+    
     @Override
     //Set up the grid and allow the realHandle() method to be called on click
     public void start(Stage primaryStage) throws IOException {
@@ -69,6 +80,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 theGrid.add(button, j, i);
                 //Add the button to the 2D array
                 buttonGrid[j][i] = button;
+                allButtons.add(button);
 
                 //If button clicked
                 button.setOnAction(e -> {
@@ -76,11 +88,21 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 });
             }
         }
+        Button startOver = new Button("Start Over");
+        startOver.setOnAction(e -> {
+            try {
+                count = 0;
+                start(window);
+            } catch (IOException ex) {
+                Logger.getLogger(MatchingThreeGame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        theGrid.add(startOver, 8, 8);
 
         //Scene itself.  Size of the window here
-        scene = new Scene(theGrid, 600, 500);
+        scene1 = new Scene(theGrid, 600, 500);
         //Show the scene
-        window.setScene(scene);
+        window.setScene(scene1);
         //Show everything
         window.show();
 
@@ -445,7 +467,7 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         button2.setGraphic(new ImageView(button1Image));
 
     }
-
+    
     public ArrayList<SmartButton> getListOfRemoved(ArrayList<SmartButton> firstX, ArrayList<SmartButton> firstY,
             ArrayList<SmartButton> secondX, ArrayList<SmartButton> secondY) {
         ArrayList<SmartButton> removeThese = new ArrayList<>();
@@ -512,11 +534,15 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
                 }
             }
             for (SmartButton s : noDuplicates) {
-                s.setBackground(new Background(new BackgroundFill(Color.GOLD, CornerRadii.EMPTY, Insets.EMPTY)));
+                if (allButtons.contains(s)) {
+                    s.setBackground(new Background(new BackgroundFill(Color.GOLD, CornerRadii.EMPTY, Insets.EMPTY)));
+                    count++;
+                    allButtons.remove(s);
+                }
+                
                 //s.setStyle("-fx-border-color: green");
             }
         }
-        
         return noDuplicates;
     }
     
@@ -562,8 +588,10 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         for (SmartButton s : noDuplicates) {
             findAutomatedPairs(buttonGrid, rows, columns);
         }
-            
-        //}
+        
+        if (count == (rows*columns)) {
+            win();
+        }
     }
     
     public boolean checkForHorizontal(ArrayList<SmartButton> noDuplicates) {
@@ -640,7 +668,6 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         SmartButton theButton;
         SmartButton giverButton; //Called this because this button "gives" it's information to theButton.
         int permanentX = noDuplicates.get(0).getX();
-        System.out.println(lowestY);
         for (int i = lowestY; i-noDuplicates.size() >= 0; i--) {
             theButton = buttonGrid[permanentX][i];
             giverButton = buttonGrid[permanentX][i-noDuplicates.size()];
@@ -759,21 +786,24 @@ public class MatchingThreeGame extends Application implements EventHandler<Actio
         }
     }
     
-    //Leave this commented out now.  After using it unsuccessfully, it seems like it checks for every possible move.
-    //Could be helpful!
-    /*public void getRidOfGeneratedPairs(SmartButton[][] buttonGrid, int rows, int columns){
-        ArrayList<SmartButton> neighbors = new ArrayList<>();
-        for (int i = 0; i < buttonGrid.length; i++) {
-            for (int j = 0; j < buttonGrid.length; j++) {
-                neighbors = getNeighbors(buttonGrid, buttonGrid[j][i], rows, columns);
-                for (int k = 0; k < neighbors.size(); k++) {
-                    if (neighbors.get(k).getX() != -1) {
-                        realHandle(buttonGrid[j][i], neighbors.get(k), buttonGrid, rows, columns);
-                    }
-                }
+    public void win() {
+        Image dragonKing = new Image("/dragonking.png", 400, 400, false, true);
+        Label theLabel = new Label("You Win!");
+        Button button1 = new Button("Play again?");
+        button1.setOnAction(e -> {
+            try {
+                start(window);
+                window.setScene(scene1);
+            } catch (IOException ex) {
+                Logger.getLogger(MatchingThreeGame.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
-    }*/
+        });
+        VBox layout = new VBox(20);
+        layout.setAlignment(Pos.CENTER);
+        layout.getChildren().addAll(new ImageView(dragonKing), theLabel, button1);
+        scene2 = new Scene(layout, 600, 500);
+        window.setScene(scene2);
+    }
 
     public static void main(String[] args) {
         launch(args);
